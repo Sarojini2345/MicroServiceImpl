@@ -1,6 +1,5 @@
 package com.order.service.serviceImpl;
 
-import com.fasterxml.jackson.core.JacksonException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.order.common.PaymentDto;
@@ -9,6 +8,7 @@ import com.order.payload.TransactionRequest;
 import com.order.payload.TransactionResponse;
 import com.order.repository.OrderRepository;
 import com.order.service.MyOrderService;
+import com.order.serviceclient.PaymentService;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -25,6 +25,8 @@ public class OrderServiceImpl implements MyOrderService {
     @Autowired
     private RestTemplate restTemplate;
     
+    @Autowired
+    private PaymentService paymentService;
 
     @Override
     public TransactionResponse saveOrder(TransactionRequest request) throws JsonProcessingException{
@@ -36,7 +38,8 @@ public class OrderServiceImpl implements MyOrderService {
         paymentDto.setOrderId(savedOrder.getOrderId());
         paymentDto.setAmount(savedOrder.getTotalAmount());
         log.info("Sending request to payment-service from Order-service ");
-        PaymentDto paymentDto1 = restTemplate.postForObject("http://localhost:8585/api/payments/doPayment", paymentDto, PaymentDto.class);
+      //  PaymentDto paymentDto1 = restTemplate.postForObject("http://PAYMENT-SERVICE/api/payments/doPayment", paymentDto, PaymentDto.class);
+        PaymentDto paymentDto1 = paymentService.doPayment(paymentDto);
         log.info("from Orderservice "+new ObjectMapper().writeValueAsString(paymentDto1));
         System.out.println(paymentDto1.getPaymentStatus());
         String msg = paymentDto1.getPaymentStatus().equalsIgnoreCase("success") ? "payment successfull" : "Payment failed,please try again";
